@@ -38,4 +38,4 @@ jobs:
         TWINE_USERNAME: __token__  # Используется при Trusted Publisher
         TWINE_PASSWORD: ""         # Пусто, т.к. используем OIDC
         PYPI_REPOSITORY: "pypi"
-      run: python -m twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
+      run: python -m twine upload dist/*
