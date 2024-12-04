@@ -14,25 +14,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # Шаг 1. Проверяем код из репозитория
-    - name: Checkout code
-      uses: actions/checkout@v3
+      # Шаг 1. Проверяем код из репозитория
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    # Шаг 2. Устанавливаем Python и зависимости
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      # Шаг 2. Устанавливаем Python и зависимости
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        pip install build twine
+      - name: Install dependencies
+        run: |
+          pip install build twine
 
-    # Шаг 3. Собираем дистрибутив
-    - name: Build the package
-      run: python -m build
-    - name: mint API token
+      # Шаг 3. Собираем дистрибутив
+      - name: Build the package
+        run: python -m build
+
+      - name: Mint API token
         id: mint-token
+        env:
+          ACTIONS_ID_TOKEN_REQUEST_TOKEN: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ACTIONS_ID_TOKEN_REQUEST_URL: ${{ secrets.ACTIONS_ID_TOKEN_REQUEST_URL }}
         run: |
           # retrieve the ambient OIDC token
           resp=$(curl -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
@@ -46,13 +50,13 @@ jobs:
           # mask the newly minted API token, so that we don't accidentally leak it
           echo "::add-mask::${api_token}"
 
-          # see the next step in the workflow for an example of using this step output
+          # output the API token for use in subsequent steps
           echo "api-token=${api_token}" >> "${GITHUB_OUTPUT}"
 
-    # Шаг 4. Публикуем на PyPI через Trusted Publisher
-    - name: Publish to PyPI
-      env:
-        TWINE_USERNAME: __token__  # Используется при Trusted Publisher
-        TWINE_PASSWORD: ""         # Пусто, т.к. используем OIDC
-        PYPI_REPOSITORY: "pypi"
-      run: python -m twine upload dist/*
+      # Шаг 4. Публикуем на PyPI через Trusted Publisher
+      - name: Publish to PyPI
+        env:
+          TWINE_USERNAME: __token__  # Используется при Trusted Publisher
+          TWINE_PASSWORD: ${{ steps.mint-token.outputs.api-token }}  # Используем токен, сгенерированный ранее
+          PYPI_REPOSITORY: "pypi"
+        run: python -m twine upload dist/*
