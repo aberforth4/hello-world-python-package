@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write  # Требуется для OIDC
+  contents: read   # Для доступа к коду
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -28,9 +32,10 @@ jobs:
     - name: Build the package
       run: python -m build
 
-    # Шаг 4. Публикуем на PyPI
+    # Шаг 4. Публикуем на PyPI через Trusted Publisher
     - name: Publish to PyPI
       env:
-        TWINE_USERNAME: __token__ # Пользователь для токенов PyPI
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }} # Токен из Secrets
-      run: python -m twine upload dist/*
+        TWINE_USERNAME: __token__  # Используется при Trusted Publisher
+        TWINE_PASSWORD: ""         # Пусто, т.к. используем OIDC
+        PYPI_REPOSITORY: "pypi"
+      run: python -m twine upload --repository-url https://upload.pypi.org/legacy/ dist/*
