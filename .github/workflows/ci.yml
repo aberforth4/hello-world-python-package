@@ -31,6 +31,6 @@ jobs:
     # Шаг 4. Публикуем на PyPI
     - name: Publish to PyPI
       env:
-        TWINE_USERNAME: a4444 # Пользователь для токенов PyPI
+        TWINE_USERNAME: __token__ # Пользователь для токенов PyPI
         TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }} # Токен из Secrets
       run: python -m twine upload dist/*
